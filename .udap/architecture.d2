@@ -1,0 +1,8 @@
+# udap:meta cloud=aws region=us-east-1 target=ec2
+
+vpc: Default VPC (us-east-1) {
+  ec2: Node.js EC2 Instance { shape: rectangle; udap-type: aws.ec2 }
+}
+user: Internet User { shape: person; udap-type: generic.user }
+
+user -> vpc.ec2: HTTP :80 / :443

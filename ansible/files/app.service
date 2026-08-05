@@ -1,0 +1,19 @@
+[Unit]
+Description=Node.js EC2 App (NestJS)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/nodejs-ec2-app
+ExecStart=/usr/bin/node /opt/nodejs-ec2-app/dist/main.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nodejs-ec2-app
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
