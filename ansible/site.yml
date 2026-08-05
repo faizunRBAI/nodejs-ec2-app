@@ -8,6 +8,16 @@
     node_version: "20"
 
   tasks:
+    # ── Wait for apt lock (Ubuntu 22.04 holds it on first boot) ───────────────
+    - name: Wait for apt lock to be released
+      ansible.builtin.shell: |
+        while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
+          echo "Waiting for apt lock..."
+          sleep 5
+        done
+      changed_when: false
+      timeout: 300
+
     # ── System packages ───────────────────────────────────────────────────────
     - name: Install curl, gnupg and git
       ansible.builtin.apt:
@@ -79,8 +89,8 @@
         group: "{{ app_user }}"
         mode: "0755"
 
-    # ── Copy app files (rsync via shell — no extra collections needed) ────────
-    - name: Copy application source to server
+    # ── Copy app files ────────────────────────────────────────────────────────
+    - name: Copy application config files
       ansible.builtin.copy:
         src: "{{ item.src }}"
         dest: "{{ app_dir }}/{{ item.dest }}"
@@ -88,10 +98,10 @@
         group: "{{ app_user }}"
         mode: "0644"
       loop:
-        - { src: "../package.json",    dest: "package.json" }
-        - { src: "../package-lock.json", dest: "package-lock.json" }
-        - { src: "../nest-cli.json",   dest: "nest-cli.json" }
-        - { src: "../tsconfig.json",   dest: "tsconfig.json" }
+        - { src: "../package.json",       dest: "package.json" }
+        - { src: "../package-lock.json",  dest: "package-lock.json" }
+        - { src: "../nest-cli.json",      dest: "nest-cli.json" }
+        - { src: "../tsconfig.json",      dest: "tsconfig.json" }
 
     - name: Copy src directory
       ansible.builtin.copy:
@@ -109,16 +119,8 @@
         recurse: true
 
     # ── npm install + build ───────────────────────────────────────────────────
-    - name: Install npm dependencies
-      ansible.builtin.command: npm ci --omit=dev
-      args:
-        chdir: "{{ app_dir }}"
-      become_user: "{{ app_user }}"
-      environment:
-        HOME: "/home/{{ app_user }}"
-
-    - name: Install devDependencies for build
-      ansible.builtin.command: npm install --save-dev @nestjs/cli typescript @nestjs/schematics
+    - name: Install all npm dependencies (including dev for build)
+      ansible.builtin.command: npm install
       args:
         chdir: "{{ app_dir }}"
       become_user: "{{ app_user }}"
@@ -127,6 +129,14 @@
 
     - name: Build NestJS application
       ansible.builtin.command: npm run build
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: "{{ app_user }}"
+      environment:
+        HOME: "/home/{{ app_user }}"
+
+    - name: Prune dev dependencies after build
+      ansible.builtin.command: npm prune --omit=dev
       args:
         chdir: "{{ app_dir }}"
       become_user: "{{ app_user }}"
