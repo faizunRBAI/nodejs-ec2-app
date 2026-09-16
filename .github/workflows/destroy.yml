@@ -3,10 +3,17 @@ name: Destroy
 on:
   workflow_dispatch:
     inputs:
+      revision:
+        description: 'Git ref or SHA'
+        required: false
+        default: ''
       udap_run_id:
         description: 'UDAP run id'
         required: false
         default: ''
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
   destroy:
@@ -20,6 +27,8 @@ jobs:
       TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.9.0'
