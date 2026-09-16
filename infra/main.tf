@@ -8,7 +8,7 @@ terraform {
     }
   }
 
-  backend "s3" {}
+  backend "local" {}
 }
 
 provider "aws" {
@@ -19,6 +19,13 @@ provider "aws" {
 
 data "aws_vpc" "default" {
   default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 
 data "aws_ami" "ubuntu" {
@@ -51,21 +58,13 @@ resource "aws_key_pair" "app" {
 
 resource "aws_security_group" "app" {
   name        = "${var.project_name}-sg"
-  description = "Allow HTTP, HTTPS and SSH"
+  description = "Allow app port 3000 and SSH"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
+    description = "Node.js app"
+    from_port   = 3000
+    to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -97,12 +96,22 @@ resource "aws_instance" "app" {
   instance_type               = var.instance_type
   key_name                    = aws_key_pair.app.key_name
   vpc_security_group_ids      = [aws_security_group.app.id]
+  subnet_id                   = tolist(data.aws_subnets.default.ids)[0]
   associate_public_ip_address = true
 
   root_block_device {
     volume_size = 20
     volume_type = "gp3"
   }
+
+  user_data = <<-EOF
+    #!/bin/bash
+    apt-get update -y
+    apt-get install -y curl
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+    npm install -g pm2
+  EOF
 
   tags = {
     Name    = "${var.project_name}-app"

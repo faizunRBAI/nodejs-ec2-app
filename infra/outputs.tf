@@ -9,6 +9,6 @@ output "instance_id" {
 }
 
 output "app_url" {
-  description = "Application URL"
-  value       = "http://${aws_eip.app.public_ip}"
+  description = "Application URL (port 3000)"
+  value       = "http://${aws_eip.app.public_ip}:3000"
 }

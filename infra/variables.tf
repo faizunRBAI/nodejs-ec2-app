@@ -1,6 +1,7 @@
 variable "project_name" {
   description = "Project name — used as a prefix for all AWS resources"
   type        = string
+  default     = "nodejs-ec2-app"
 }
 
 variable "aws_region" {
@@ -16,6 +17,6 @@ variable "instance_type" {
 }
 
 variable "ssh_public_key" {
-  description = "RSA public key injected into the EC2 key pair by the platform"
+  description = "RSA public key for EC2 key pair"
   type        = string
 }
