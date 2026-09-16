@@ -1,5 +1,5 @@
 output "instance_ip" {
-  description = "Public Elastic IP of the EC2 instance"
+  description = "Elastic IP of the EC2 instance"
   value       = aws_eip.app.public_ip
 }
 
@@ -9,6 +9,6 @@ output "instance_id" {
 }
 
 output "app_url" {
-  description = "Application URL (port 3000)"
+  description = "Public URL of the app"
   value       = "http://${aws_eip.app.public_ip}:3000"
 }
