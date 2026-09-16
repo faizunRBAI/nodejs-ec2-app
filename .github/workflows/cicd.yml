@@ -70,7 +70,11 @@ jobs:
           terraform_wrapper: false
       - name: Terraform Init
         working-directory: infra
-        run: terraform init -input=false
+        run: |
+          terraform init -input=false -reconfigure \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -input=false -auto-approve
