@@ -114,6 +114,9 @@ jobs:
           rsync -az --exclude=node_modules --exclude=infra --exclude=.git \
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ ubuntu@"$EC2_IP":/home/ubuntu/app/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Install deps and start with PM2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" bash <<'ENDSSH'
