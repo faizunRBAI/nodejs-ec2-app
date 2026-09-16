@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npm run lint
 
   # ── 2. Test ──────────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npm test
 
   # ── 3. Provision ─────────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ jobs:
             cd /home/ubuntu/app
             curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
             sudo apt-get install -y nodejs 2>/dev/null || true
-            npm ci --omit=dev
+            npm install --omit=dev
             sudo npm install -g pm2 2>/dev/null || true
             pm2 delete nodejs-ec2-app 2>/dev/null || true
             pm2 start src/index.js --name nodejs-ec2-app
